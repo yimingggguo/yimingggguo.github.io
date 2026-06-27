@@ -436,7 +436,7 @@
       </div>
       <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:#4a5568;cursor:pointer;user-select:none">
         <input type="checkbox" id="keep-logged-in" style="width:15px;height:15px;cursor:pointer" />
-        Keep me logged in for 365 days
+        Keep me logged in
       </label>
       <div class="auth-error" id="login-error"></div>
       <button class="btn-full" onclick="login()">Log in</button>
@@ -455,6 +455,10 @@
         <div class="field-label">Confirm password</div>
         <input id="reg-confirm" type="password" placeholder="Repeat your password" autocomplete="new-password" />
       </div>
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:#4a5568;cursor:pointer;user-select:none">
+        <input type="checkbox" id="reg-keep-logged-in" style="width:15px;height:15px;cursor:pointer" />
+        Keep me logged in
+      </label>
       <div class="auth-error" id="reg-error"></div>
       <button class="btn-full" onclick="register()">Create account</button>
     </div>
@@ -636,7 +640,7 @@
     const hash = await hashPassword(password);
     if (users[username].hash !== hash) { showError("login-error", "Incorrect password."); return; }
 
-    startSession(username);
+    startSession(username, document.getElementById("keep-logged-in").checked);
   }
 
   async function register() {
@@ -658,12 +662,11 @@
     const hash = await hashPassword(password);
     users[username] = { hash };
     saveUsers(users);
-    startSession(username);
+    startSession(username, document.getElementById("reg-keep-logged-in").checked);
   }
 
-  function startSession(username) {
+  function startSession(username, persist) {
     currentUser = username;
-    const persist = document.getElementById("keep-logged-in").checked;
     setSession(username, persist);
     document.getElementById("auth-screen").style.display = "none";
     document.getElementById("app-screen").style.display = "block";
@@ -993,7 +996,7 @@
   // ── Init: restore session if still open ──────────────────────────────────────
   const savedUser = getSession();
   if (savedUser && loadUsers()[savedUser]) {
-    startSession(savedUser);
+    startSession(savedUser, false);
   }
 
   setInterval(() => { if (currentUser) renderToday(); }, 60_000);
