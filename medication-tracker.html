@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medication Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .subtitle { color: #718096; font-size: 0.9rem; margin-bottom: 2rem; }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Auth screen ─────────────────────────────────── */
+    #auth-screen { width: 100%; max-width: 380px; }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 0.6rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #a0aec0;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .auth-tab.active { color: #4299e1; border-bottom-color: #4299e1; }
+
+    .auth-form { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .field-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 0.25rem;
+    }
+
+    .auth-form input {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+      background: white;
+    }
+    .auth-form input:focus { border-color: #4299e1; }
+
+    .auth-error {
+      font-size: 0.8rem;
+      color: #e53e3e;
+      background: #fff5f5;
+      border: 1px solid #fc8181;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      display: none;
+    }
+    .auth-error.visible { display: block; }
+
+    .btn-full {
+      width: 100%;
+      padding: 0.65rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: #4299e1;
+      color: white;
+      transition: background 0.15s;
+      margin-top: 0.25rem;
+    }
+    .btn-full:hover { background: #3182ce; }
+
+    /* ── App screen ──────────────────────────────────── */
+    #app-screen { display: none; width: 100%; max-width: 480px; }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 1.5rem;
+    }
+    .app-header-left h1 { margin-bottom: 0; }
+    .app-header-left .subtitle { margin-bottom: 0; }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4a5568;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .user-chip:hover { background: #f7fafc; }
+
+    /* ── Section labels ─────────────────────────────── */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a0aec0;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Medication rows ─────────────────────────────── */
+    .med-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    .med-row:last-of-type { border-bottom: none; }
+
+    .med-check {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2.5px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .med-check.done { border-color: transparent; box-shadow: 0 0 0 3px rgba(72,187,120,0.25); }
+
+    .med-info { flex: 1; min-width: 0; }
+    .med-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .med-dose { font-size: 0.78rem; color: #718096; margin-top: 1px; }
+
+    .med-actions { display: flex; gap: 0.4rem; }
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #a0aec0;
+      font-size: 1rem;
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .icon-btn:hover { color: #4a5568; background: #f7fafc; }
+    .icon-btn.danger:hover { color: #e53e3e; background: #fff5f5; }
+
+    .all-done-banner {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      color: #276749;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+    .all-done-banner.visible { display: flex; }
+
+    /* ── Add medication form ─────────────────────────── */
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: 1.5px dashed #cbd5e0;
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #718096;
+      width: 100%;
+      margin-top: 1rem;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .add-btn:hover { border-color: #4299e1; color: #2b6cb0; }
+
+    .add-form {
+      display: none;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f7fafc;
+      border-radius: 10px;
+    }
+    .add-form.open { display: flex; }
+
+    .add-form input {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+      background: white;
+    }
+    .add-form input:focus { border-color: #4299e1; }
+
+    .form-row { display: flex; gap: 0.5rem; }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: #4299e1; color: white; }
+    .btn-primary:hover { background: #3182ce; }
+    .btn-ghost { background: #e2e8f0; color: #4a5568; }
+    .btn-ghost:hover { background: #cbd5e0; }
+
+    .reset-note {
+      font-size: 0.78rem;
+      color: #a0aec0;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #f0f4f8;
+    }
+
+    /* ── Calendar tabs ───────────────────────────────── */
+    .tab-bar { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .tab {
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #4a5568;
+    }
+    .tab.active { border-color: transparent; color: white; }
+
+    /* ── Calendar ────────────────────────────────────── */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .cal-header h3 { font-size: 1rem; font-weight: 600; }
+
+    .nav-btn {
+      background: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #4a5568;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover { background: #f7fafc; }
+
+    .day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #a0aec0;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #4a5568;
+      background: #f7fafc;
+      position: relative;
+      gap: 2px;
+    }
+    .cal-cell.empty { background: transparent; }
+    .cal-cell.future { background: transparent; color: #cbd5e0; }
+    .cal-cell.today { outline: 2px solid #4299e1; outline-offset: 1px; }
+
+    .dot-row { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #718096;
+      flex-wrap: wrap;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .streak {
+      margin-top: 1.25rem;
+      padding: 0.75rem 1rem;
+      background: #ebf8ff;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      color: #2b6cb0;
+      font-weight: 500;
+    }
+
+    /* ── Edit modal ──────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    .modal .form-col { display: flex; flex-direction: column; gap: 0.6rem; }
+    .modal input {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .modal input:focus { border-color: #4299e1; }
+    .modal .form-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+    .color-picker { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+    .color-swatch {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2.5px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .color-swatch.selected { border-color: #1a202c; }
+
+    .empty-state {
+      text-align: center;
+      padding: 1.5rem 0 0.5rem;
+      color: #a0aec0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Auth screen ───────────────────────────────────────────────────────── -->
+<div id="auth-screen">
+  <h1 style="text-align:center">💊 Medication Tracker</h1>
+  <p class="subtitle" style="text-align:center;margin-bottom:1.5rem">Stay on top of your daily doses</p>
+
+  <div class="card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Log in</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Create account</div>
+    </div>
+
+    <div class="auth-form" id="login-form">
+      <div>
+        <div class="field-label">Username</div>
+        <input id="login-username" type="text" placeholder="Enter your username" autocomplete="username" />
+      </div>
+      <div>
+        <div class="field-label">Password</div>
+        <input id="login-password" type="password" placeholder="Enter your password" autocomplete="current-password" />
+      </div>
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:#4a5568;cursor:pointer;user-select:none">
+        <input type="checkbox" id="keep-logged-in" style="width:15px;height:15px;cursor:pointer" />
+        Keep me logged in for 365 days
+      </label>
+      <div class="auth-error" id="login-error"></div>
+      <button class="btn-full" onclick="login()">Log in</button>
+    </div>
+
+    <div class="auth-form" id="register-form" style="display:none">
+      <div>
+        <div class="field-label">Username</div>
+        <input id="reg-username" type="text" placeholder="Choose a username" autocomplete="username" />
+      </div>
+      <div>
+        <div class="field-label">Password</div>
+        <input id="reg-password" type="password" placeholder="Choose a password" autocomplete="new-password" />
+      </div>
+      <div>
+        <div class="field-label">Confirm password</div>
+        <input id="reg-confirm" type="password" placeholder="Repeat your password" autocomplete="new-password" />
+      </div>
+      <div class="auth-error" id="reg-error"></div>
+      <button class="btn-full" onclick="register()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── App screen ────────────────────────────────────────────────────────── -->
+<div id="app-screen">
+  <div class="app-header">
+    <div class="app-header-left">
+      <h1>💊 Medication Tracker</h1>
+      <p class="subtitle">Stay on top of your daily doses</p>
+    </div>
+    <div class="user-chip" onclick="logout()" title="Log out">
+      <span id="user-label"></span>
+      <span style="font-size:0.75rem;color:#a0aec0">Log out</span>
+    </div>
+  </div>
+
+  <!-- Today card -->
+  <div class="card">
+    <div class="section-label">Today — <span id="today-date"></span></div>
+    <div id="med-list"></div>
+    <div class="all-done-banner" id="all-done-banner">✅ All medications taken for today!</div>
+    <button class="add-btn" onclick="toggleAddForm()">＋ Add medication</button>
+    <div class="add-form" id="add-form">
+      <input id="new-name" type="text" placeholder="Medication name (e.g. Aspirin)" maxlength="40" />
+      <input id="new-dose" type="text" placeholder="Dose / notes (optional, e.g. 100mg)" maxlength="40" />
+      <div class="section-label" style="margin:0.2rem 0 0.1rem">Colour</div>
+      <div class="color-picker" id="add-color-picker"></div>
+      <div class="form-row">
+        <button class="btn btn-primary" onclick="addMedication()">Add</button>
+        <button class="btn btn-ghost" onclick="toggleAddForm()">Cancel</button>
+      </div>
+    </div>
+    <div class="reset-note" id="reset-note"></div>
+  </div>
+
+  <!-- Calendar card -->
+  <div class="card">
+    <div class="section-label">History</div>
+    <div class="tab-bar" id="tab-bar"></div>
+    <div class="cal-header">
+      <button class="nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+      <h3 id="cal-month-label"></h3>
+      <button class="nav-btn" onclick="changeMonth(1)">&#8594;</button>
+    </div>
+    <div class="day-labels">
+      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+      <span>Thu</span><span>Fri</span><span>Sat</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#48bb78"></span>All taken</span>
+      <span><span class="legend-dot" style="background:#fbd38d"></span>Partial</span>
+      <span><span class="legend-dot" style="background:#fed7d7"></span>Missed</span>
+    </div>
+    <div class="streak" id="streak-text"></div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h3>Edit medication</h3>
+    <div class="form-col">
+      <input id="edit-name" type="text" placeholder="Medication name" maxlength="40" />
+      <input id="edit-dose" type="text" placeholder="Dose / notes (optional)" maxlength="40" />
+      <div class="section-label" style="margin:0.4rem 0 0.1rem">Colour</div>
+      <div class="color-picker" id="edit-color-picker"></div>
+    </div>
+    <div class="form-row">
+      <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const RESET_HOUR = 8;
+  const PALETTE = [
+    "#48bb78","#4299e1","#ed8936","#e53e3e",
+    "#9f7aea","#38b2ac","#f6ad55","#fc8181",
+  ];
+
+  // ── Auth storage ─────────────────────────────────────────────────────────────
+  // Users: { [username]: { hash } }
+  // Per-user data keyed by username prefix
+  function loadUsers() {
+    try { return JSON.parse(localStorage.getItem("medTracker_users")) || {}; } catch { return {}; }
+  }
+  function saveUsers(u) { localStorage.setItem("medTracker_users", JSON.stringify(u)); }
+
+  // Very simple hash — not cryptographically secure, but fine for local-only storage
+  async function hashPassword(pw) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+
+  // Session: sessionStorage for normal login, localStorage with expiry for "keep me logged in"
+  const SESSION_KEY = "medTracker_session";
+  const SESSION_TTL = 365 * 24 * 60 * 60 * 1000; // 365 days in ms
+
+  function getSession() {
+    // Check ephemeral session first
+    const ephemeral = sessionStorage.getItem(SESSION_KEY);
+    if (ephemeral) return ephemeral;
+    // Check persistent session
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const { user, expires } = JSON.parse(raw);
+      if (Date.now() > expires) { localStorage.removeItem(SESSION_KEY); return null; }
+      return user;
+    } catch { return null; }
+  }
+
+  function setSession(u, persist) {
+    if (persist) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ user: u, expires: Date.now() + SESSION_TTL }));
+    } else {
+      sessionStorage.setItem(SESSION_KEY, u);
+    }
+  }
+
+  function clearSession() {
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  // Per-user storage keys
+  function medKey(u)  { return `medTracker_meds_${u}`; }
+  function logKey(u)  { return `medTracker_log_${u}`; }
+
+  function loadMeds() {
+    try { return JSON.parse(localStorage.getItem(medKey(currentUser))) || []; } catch { return []; }
+  }
+  function saveMeds(m) { localStorage.setItem(medKey(currentUser), JSON.stringify(m)); }
+  function loadLog() {
+    try { return JSON.parse(localStorage.getItem(logKey(currentUser))) || {}; } catch { return {}; }
+  }
+  function saveLog(l) { localStorage.setItem(logKey(currentUser), JSON.stringify(l)); }
+
+  // ── Auth UI ──────────────────────────────────────────────────────────────────
+  let currentUser = null;
+
+  function switchAuthTab(tab) {
+    const isLogin = tab === "login";
+    document.getElementById("tab-login").classList.toggle("active", isLogin);
+    document.getElementById("tab-register").classList.toggle("active", !isLogin);
+    document.getElementById("login-form").style.display = isLogin ? "flex" : "none";
+    document.getElementById("register-form").style.display = isLogin ? "none" : "flex";
+    clearAuthErrors();
+  }
+
+  function clearAuthErrors() {
+    ["login-error","reg-error"].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = "";
+      el.classList.remove("visible");
+    });
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add("visible");
+  }
+
+  async function login() {
+    const username = document.getElementById("login-username").value.trim().toLowerCase();
+    const password = document.getElementById("login-password").value;
+    if (!username || !password) { showError("login-error", "Please enter your username and password."); return; }
+
+    const users = loadUsers();
+    if (!users[username]) { showError("login-error", "No account found with that username."); return; }
+
+    const hash = await hashPassword(password);
+    if (users[username].hash !== hash) { showError("login-error", "Incorrect password."); return; }
+
+    startSession(username);
+  }
+
+  async function register() {
+    const username = document.getElementById("reg-username").value.trim().toLowerCase();
+    const password = document.getElementById("reg-password").value;
+    const confirm  = document.getElementById("reg-confirm").value;
+
+    if (!username) { showError("reg-error", "Please choose a username."); return; }
+    if (!/^[a-z0-9_]{2,30}$/.test(username)) {
+      showError("reg-error", "Username must be 2–30 characters: letters, numbers, or underscores.");
+      return;
+    }
+    if (password.length < 6) { showError("reg-error", "Password must be at least 6 characters."); return; }
+    if (password !== confirm) { showError("reg-error", "Passwords don't match."); return; }
+
+    const users = loadUsers();
+    if (users[username]) { showError("reg-error", "That username is already taken."); return; }
+
+    const hash = await hashPassword(password);
+    users[username] = { hash };
+    saveUsers(users);
+    startSession(username);
+  }
+
+  function startSession(username) {
+    currentUser = username;
+    const persist = document.getElementById("keep-logged-in").checked;
+    setSession(username, persist);
+    document.getElementById("auth-screen").style.display = "none";
+    document.getElementById("app-screen").style.display = "block";
+    document.getElementById("user-label").textContent = username;
+    initCalendar();
+    renderToday();
+    renderTabs();
+    renderCalendar();
+  }
+
+  function logout() {
+    clearSession();
+    currentUser = null;
+    document.getElementById("auth-screen").style.display = "";
+    document.getElementById("app-screen").style.display = "none";
+    // Clear form fields
+    ["login-username","login-password","reg-username","reg-password","reg-confirm"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    clearAuthErrors();
+    switchAuthTab("login");
+  }
+
+  // ── Date helpers ─────────────────────────────────────────────────────────────
+  function dateKey(d) {
+    d = d || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function uid() { return Math.random().toString(36).slice(2,9); }
+
+  // ── Colour picker ────────────────────────────────────────────────────────────
+  let addSelectedColor = PALETTE[0];
+  let editSelectedColor = PALETTE[0];
+
+  function buildColorPicker(containerId, currentColor, onSelect) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = "";
+    PALETTE.forEach(c => {
+      const sw = document.createElement("div");
+      sw.className = "color-swatch" + (c === currentColor ? " selected" : "");
+      sw.style.background = c;
+      sw.onclick = () => {
+        el.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("selected"));
+        sw.classList.add("selected");
+        onSelect(c);
+      };
+      el.appendChild(sw);
+    });
+  }
+
+  // ── Today section ───────────────────────────────────────────────────────────
+  function renderToday() {
+    const meds = loadMeds();
+    const log  = loadLog();
+    const key  = dateKey();
+    const list = document.getElementById("med-list");
+
+    const now  = new Date();
+    const next = new Date();
+    next.setHours(RESET_HOUR, 0, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    const hrs  = Math.floor((next - now) / 3600000);
+    const mins = Math.floor(((next - now) % 3600000) / 60000);
+
+    document.getElementById("today-date").textContent =
+      now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    document.getElementById("reset-note").textContent =
+      `Resets in ${hrs}h ${mins}m (at ${RESET_HOUR}:00)`;
+
+    if (meds.length === 0) {
+      list.innerHTML = `<div class="empty-state">No medications added yet.<br>Use the button below to get started.</div>`;
+      document.getElementById("all-done-banner").classList.remove("visible");
+      return;
+    }
+
+    const dayLog = log[key] || {};
+    list.innerHTML = meds.map(m => {
+      const taken = !!dayLog[m.id];
+      const checkStyle = taken
+        ? `background:${m.color}; border-color:${m.color};`
+        : `border-color:#e2e8f0;`;
+      return `
+        <div class="med-row">
+          <div class="med-check ${taken ? "done" : ""}" style="${checkStyle}"
+               onclick="toggleMed('${m.id}')">
+            ${taken ? "✓" : ""}
+          </div>
+          <div class="med-info">
+            <div class="med-name">${escHtml(m.name)}</div>
+            ${m.dose ? `<div class="med-dose">${escHtml(m.dose)}</div>` : ""}
+          </div>
+          <div class="med-actions">
+            <button class="icon-btn" onclick="openEdit('${m.id}')">✏️</button>
+            <button class="icon-btn danger" onclick="deleteMed('${m.id}')">🗑️</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    const allTaken = meds.every(m => !!dayLog[m.id]);
+    document.getElementById("all-done-banner").classList.toggle("visible", allTaken);
+  }
+
+  function toggleMed(medId) {
+    const log = loadLog();
+    const key = dateKey();
+    if (!log[key]) log[key] = {};
+    if (log[key][medId]) delete log[key][medId];
+    else log[key][medId] = true;
+    saveLog(log);
+    renderToday();
+    renderCalendar();
+  }
+
+  // ── Add medication ───────────────────────────────────────────────────────────
+  function toggleAddForm() {
+    const form = document.getElementById("add-form");
+    const opening = !form.classList.contains("open");
+    form.classList.toggle("open");
+    if (opening) {
+      addSelectedColor = PALETTE[0];
+      buildColorPicker("add-color-picker", addSelectedColor, c => { addSelectedColor = c; });
+      document.getElementById("new-name").focus();
+    } else {
+      document.getElementById("new-name").value = "";
+      document.getElementById("new-dose").value = "";
+    }
+  }
+
+  function addMedication() {
+    const name = document.getElementById("new-name").value.trim();
+    if (!name) { document.getElementById("new-name").focus(); return; }
+    const dose = document.getElementById("new-dose").value.trim();
+    const meds = loadMeds();
+    meds.push({ id: uid(), name, dose, color: addSelectedColor, addedOn: dateKey() });
+    saveMeds(meds);
+    document.getElementById("new-name").value = "";
+    document.getElementById("new-dose").value = "";
+    toggleAddForm();
+    renderToday();
+    renderCalendar();
+    renderTabs();
+  }
+
+  // ── Edit modal ───────────────────────────────────────────────────────────────
+  let editingId = null;
+
+  function openEdit(medId) {
+    const med = loadMeds().find(m => m.id === medId);
+    if (!med) return;
+    editingId = medId;
+    editSelectedColor = med.color;
+    document.getElementById("edit-name").value = med.name;
+    document.getElementById("edit-dose").value = med.dose || "";
+    buildColorPicker("edit-color-picker", editSelectedColor, c => { editSelectedColor = c; });
+    document.getElementById("edit-modal").classList.add("open");
+    document.getElementById("edit-name").focus();
+  }
+
+  function saveEdit() {
+    const name = document.getElementById("edit-name").value.trim();
+    if (!name) { document.getElementById("edit-name").focus(); return; }
+    const meds = loadMeds();
+    const idx  = meds.findIndex(m => m.id === editingId);
+    if (idx === -1) return;
+    meds[idx] = { ...meds[idx], name, dose: document.getElementById("edit-dose").value.trim(), color: editSelectedColor };
+    saveMeds(meds);
+    closeModal();
+    renderToday();
+    renderCalendar();
+    renderTabs();
+  }
+
+  function closeModal() {
+    document.getElementById("edit-modal").classList.remove("open");
+    editingId = null;
+  }
+
+  document.getElementById("edit-modal").addEventListener("click", e => {
+    if (e.target === document.getElementById("edit-modal")) closeModal();
+  });
+
+  // ── Delete ───────────────────────────────────────────────────────────────────
+  function deleteMed(medId) {
+    saveMeds(loadMeds().filter(m => m.id !== medId));
+    if (calTab === medId) calTab = "all";
+    renderToday();
+    renderCalendar();
+    renderTabs();
+  }
+
+  // ── Calendar ─────────────────────────────────────────────────────────────────
+  let calYear, calMonth, calTab = "all";
+
+  function initCalendar() {
+    const now = new Date();
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    calTab   = "all";
+  }
+
+  function changeMonth(dir) {
+    calMonth += dir;
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    if (calMonth > 11) { calMonth = 0;  calYear++; }
+    renderCalendar();
+  }
+
+  function renderTabs() {
+    const meds   = loadMeds();
+    const tabs   = [{ id: "all", name: "All", color: "#4a5568" }, ...meds];
+    document.getElementById("tab-bar").innerHTML = tabs.map(t => {
+      const active = calTab === t.id;
+      return `<div class="tab ${active ? "active" : ""}"
+                   style="${active ? `background:${t.color || "#4a5568"};` : ""}"
+                   onclick="setCalTab('${t.id}')">${escHtml(t.name)}</div>`;
+    }).join("");
+  }
+
+  function setCalTab(id) { calTab = id; renderTabs(); renderCalendar(); }
+
+  function renderCalendar() {
+    const meds     = loadMeds();
+    const log      = loadLog();
+    const todayStr = dateKey();
+
+    document.getElementById("cal-month-label").textContent =
+      new Date(calYear, calMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+    const firstDay    = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const trackStart  = (meds.map(m => m.addedOn).filter(Boolean).sort()[0]) || todayStr;
+    const viewMeds    = calTab === "all" ? meds : meds.filter(m => m.id === calTab);
+
+    const grid = document.getElementById("cal-grid");
+    grid.innerHTML = "";
+
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement("div");
+      el.className = "cal-cell empty";
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds  = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const el  = document.createElement("div");
+      el.className = "cal-cell";
+      el.textContent = d;
+
+      const isFuture    = ds > todayStr;
+      const isPast      = ds < todayStr;
+      const isToday     = ds === todayStr;
+      const beforeTrack = ds < trackStart;
+
+      if (isToday)  el.classList.add("today");
+      if (isFuture) { el.classList.add("future"); grid.appendChild(el); continue; }
+
+      if (!beforeTrack && viewMeds.length > 0) {
+        const dayLog   = log[ds] || {};
+        const takenIds = viewMeds.filter(m => !!dayLog[m.id]);
+        const taken    = takenIds.length;
+        const total    = viewMeds.length;
+
+        if (calTab === "all") {
+          if (taken > 0) {
+            const dotRow = document.createElement("div");
+            dotRow.className = "dot-row";
+            takenIds.slice(0, 6).forEach(m => {
+              const dot = document.createElement("div");
+              dot.className = "dot";
+              dot.style.background = m.color;
+              dotRow.appendChild(dot);
+            });
+            el.appendChild(dotRow);
+            el.style.background = taken === total ? "#f0fff4" : "#fffbeb";
+          } else if (isPast) {
+            el.style.background = "#fff5f5";
+            el.style.color = "#c53030";
+          }
+        } else {
+          const med = viewMeds[0];
+          if (taken === 1) { el.style.background = med.color; el.style.color = "white"; }
+          else if (isPast) { el.style.background = "#fed7d7"; el.style.color = "#c53030"; }
+        }
+      }
+
+      grid.appendChild(el);
+    }
+
+    renderStreak(log, viewMeds, todayStr);
+  }
+
+  function renderStreak(log, viewMeds, todayStr) {
+    if (viewMeds.length === 0) {
+      document.getElementById("streak-text").textContent = "Add medications to start tracking.";
+      return;
+    }
+    const allTakenOn = ds => viewMeds.every(m => !!(log[ds] || {})[m.id]);
+
+    let streak = 0;
+    const d = new Date();
+    if (!allTakenOn(todayStr)) d.setDate(d.getDate() - 1);
+    while (allTakenOn(dateKey(d))) { streak++; d.setDate(d.getDate() - 1); }
+
+    const total = Object.keys(log).filter(ds => viewMeds.some(m => !!(log[ds] || {})[m.id])).length;
+    document.getElementById("streak-text").textContent =
+      streak > 0
+        ? `🔥 ${streak}-day streak! ${total} total days logged.`
+        : `No current streak. ${total} total days logged.`;
+  }
+
+  // ── Utility ──────────────────────────────────────────────────────────────────
+  function escHtml(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────────
+  document.getElementById("new-name").addEventListener("keydown", e => { if (e.key === "Enter") addMedication(); });
+  document.getElementById("new-dose").addEventListener("keydown", e => { if (e.key === "Enter") addMedication(); });
+  document.getElementById("edit-name").addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); });
+  document.getElementById("edit-dose").addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); });
+  document.getElementById("login-username").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  document.getElementById("login-password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  document.getElementById("reg-username").addEventListener("keydown", e => { if (e.key === "Enter") register(); });
+  document.getElementById("reg-password").addEventListener("keydown", e => { if (e.key === "Enter") register(); });
+  document.getElementById("reg-confirm").addEventListener("keydown", e => { if (e.key === "Enter") register(); });
+
+  // ── Init: restore session if still open ──────────────────────────────────────
+  const savedUser = getSession();
+  if (savedUser && loadUsers()[savedUser]) {
+    startSession(savedUser);
+  }
+
+  setInterval(() => { if (currentUser) renderToday(); }, 60_000);
+</script>
+</body>
+</html>
