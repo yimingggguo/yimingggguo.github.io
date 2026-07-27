@@ -65,8 +65,37 @@
     <div class="done-content">
       <div class="done-emoji" aria-hidden="true">🥩</div>
       <h2 id="done-heading" tabindex="-1">Searing complete</h2>
-      <p>All 6 sides seared. Rest the steak before slicing.</p>
+      <p id="done-summary">All 6 sides seared. Rest the steak before slicing.</p>
+      <p class="done-elapsed">Total cooking time: <span id="done-elapsed-time">0:00</span></p>
       <button id="btn-again" class="btn btn-primary">Cook another</button>
+    </div>
+  </section>
+
+  <!-- Custom sequence builder -->
+  <section id="screen-builder" class="screen hidden">
+    <header class="timer-header">
+      <button id="btn-builder-back" class="icon-btn" aria-label="Back to recipe list">←</button>
+      <div class="timer-title">
+        <h2 id="builder-heading" tabindex="-1">New Sequence</h2>
+      </div>
+      <span class="icon-btn-placeholder" aria-hidden="true"></span>
+    </header>
+
+    <div class="builder-body">
+      <label class="field">
+        <span class="field-label">Sequence name</span>
+        <input id="builder-name" type="text" placeholder="e.g. Ribeye four sides" maxlength="60">
+      </label>
+
+      <div id="builder-steps" class="builder-steps"></div>
+
+      <button id="btn-add-step" type="button" class="btn btn-secondary btn-add-step">+ Add step</button>
+
+      <p id="builder-error" class="builder-error hidden" role="alert"></p>
+    </div>
+
+    <div class="controls">
+      <button id="btn-start-custom" class="btn btn-primary">Start Sequence</button>
     </div>
   </section>
 

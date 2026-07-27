@@ -7,8 +7,11 @@ const els = {
   screenSelect: document.getElementById("screen-select"),
   screenTimer: document.getElementById("screen-timer"),
   screenDone: document.getElementById("screen-done"),
+  screenBuilder: document.getElementById("screen-builder"),
   appTitle: document.getElementById("app-title"),
   doneHeading: document.getElementById("done-heading"),
+  doneSummary: document.getElementById("done-summary"),
+  doneElapsedTime: document.getElementById("done-elapsed-time"),
   recipeList: document.getElementById("recipe-list"),
   recipeName: document.getElementById("recipe-name"),
   stepDots: document.getElementById("step-dots"),
@@ -24,12 +27,18 @@ const els = {
   btnBack: document.getElementById("btn-back"),
   btnMute: document.getElementById("btn-mute"),
   btnAgain: document.getElementById("btn-again"),
+  builderHeading: document.getElementById("builder-heading"),
+  builderName: document.getElementById("builder-name"),
+  builderSteps: document.getElementById("builder-steps"),
+  builderError: document.getElementById("builder-error"),
+  btnAddStep: document.getElementById("btn-add-step"),
+  btnStartCustom: document.getElementById("btn-start-custom"),
+  btnBuilderBack: document.getElementById("btn-builder-back"),
 };
 
 els.ringProgress.style.strokeDasharray = String(RING_CIRCUMFERENCE);
 
 const state = {
-  recipeKey: null,
   steps: [],
   stepIndex: 0,
   remainingMs: 0,
@@ -74,24 +83,85 @@ function speak(text) {
 
 // ---------- Recipe selection ----------
 
-function renderRecipeList() {
-  els.recipeList.innerHTML = "";
-  Object.entries(RECIPES).forEach(([key, recipe]) => {
-    const card = document.createElement("button");
-    card.className = "recipe-card";
-    card.innerHTML = `
-      <p class="subtitle">${recipe.subtitle}</p>
-      <h3>${recipe.name}</h3>
-      <p class="description">${recipe.description}</p>
-    `;
-    card.addEventListener("click", () => selectRecipe(key));
-    els.recipeList.appendChild(card);
-  });
+const CUSTOM_RECIPES_KEY = "steakTimerCustomRecipes";
+
+function loadCustomRecipes() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CUSTOM_RECIPES_KEY));
+    return Array.isArray(stored) ? stored : [];
+  } catch (e) {
+    return [];
+  }
 }
 
-function selectRecipe(key) {
-  const recipe = RECIPES[key];
-  state.recipeKey = key;
+function saveCustomRecipes(list) {
+  localStorage.setItem(CUSTOM_RECIPES_KEY, JSON.stringify(list));
+}
+
+function deleteCustomRecipe(id) {
+  saveCustomRecipes(loadCustomRecipes().filter((r) => r.id !== id));
+  renderRecipeList();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function pluralize(n, word) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
+function renderRecipeList() {
+  els.recipeList.innerHTML = "";
+  Object.values(RECIPES).forEach((recipe) => {
+    els.recipeList.appendChild(buildRecipeCard(recipe));
+  });
+  loadCustomRecipes().forEach((recipe) => {
+    els.recipeList.appendChild(buildRecipeCard(recipe, { removable: true }));
+  });
+  els.recipeList.appendChild(buildAddCard());
+}
+
+function buildRecipeCard(recipe, { removable = false } = {}) {
+  const card = document.createElement("div");
+  card.className = "recipe-card";
+
+  const main = document.createElement("button");
+  main.type = "button";
+  main.className = "recipe-card-main";
+  main.innerHTML = `
+    <p class="subtitle">${escapeHtml(recipe.subtitle || "")}</p>
+    <h3>${escapeHtml(recipe.name)}</h3>
+    <p class="description">${escapeHtml(recipe.description || "")}</p>
+  `;
+  main.addEventListener("click", () => selectRecipe(recipe));
+  card.appendChild(main);
+
+  if (removable) {
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "recipe-card-delete";
+    del.setAttribute("aria-label", `Delete ${recipe.name}`);
+    del.textContent = "×";
+    del.addEventListener("click", () => deleteCustomRecipe(recipe.id));
+    card.appendChild(del);
+  }
+
+  return card;
+}
+
+function buildAddCard() {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "recipe-card-add";
+  btn.innerHTML = `<span class="add-icon" aria-hidden="true">+</span> Create your own sequence`;
+  btn.addEventListener("click", openBuilder);
+  return btn;
+}
+
+function selectRecipe(recipe) {
   state.steps = recipe.steps;
   state.stepIndex = 0;
   state.remainingMs = recipe.steps[0].duration * 1000;
@@ -255,23 +325,113 @@ function resetTimer() {
 function finish() {
   clearInterval(state.intervalId);
   state.running = false;
+  els.doneSummary.textContent = `${pluralize(state.steps.length, "step")} complete. Rest before slicing.`;
+  els.doneElapsedTime.textContent = formatTime(state.elapsedMs, true);
   beep(1200, 300);
   speak("Searing complete. Rest the steak before slicing.");
   showScreen("done");
 }
 
+// ---------- Custom sequence builder ----------
+
+function openBuilder() {
+  els.builderName.value = "";
+  els.builderSteps.innerHTML = "";
+  els.builderError.classList.add("hidden");
+  addBuilderStep();
+  addBuilderStep();
+  showScreen("builder");
+}
+
+function addBuilderStep() {
+  const n = els.builderSteps.children.length + 1;
+  const row = document.createElement("div");
+  row.className = "step-row";
+  row.innerHTML = `
+    <input type="text" class="step-label-input" value="${escapeHtml(`Sear side ${n}`)}" aria-label="Step ${n} label" maxlength="40">
+    <input type="number" class="step-duration-input" value="30" min="1" max="3600" aria-label="Step ${n} duration in seconds">
+    <span class="step-duration-unit" aria-hidden="true">sec</span>
+    <button type="button" class="step-remove-btn" aria-label="Remove step ${n}">×</button>
+  `;
+  row.querySelector(".step-remove-btn").addEventListener("click", () => {
+    if (els.builderSteps.children.length <= 1) return;
+    row.remove();
+    updateBuilderStepA11y();
+  });
+  els.builderSteps.appendChild(row);
+  updateBuilderStepA11y();
+}
+
+function updateBuilderStepA11y() {
+  const rows = [...els.builderSteps.children];
+  rows.forEach((row, i) => {
+    const n = i + 1;
+    row.querySelector(".step-label-input").setAttribute("aria-label", `Step ${n} label`);
+    row.querySelector(".step-duration-input").setAttribute("aria-label", `Step ${n} duration in seconds`);
+    const removeBtn = row.querySelector(".step-remove-btn");
+    removeBtn.setAttribute("aria-label", `Remove step ${n}`);
+    removeBtn.disabled = rows.length <= 1;
+  });
+}
+
+function collectBuilderSteps() {
+  return [...els.builderSteps.children].map((row) => {
+    const label = row.querySelector(".step-label-input").value.trim();
+    const rawDuration = parseInt(row.querySelector(".step-duration-input").value, 10);
+    const duration = Number.isFinite(rawDuration) ? Math.min(3600, Math.max(1, rawDuration)) : NaN;
+    return { label, duration };
+  });
+}
+
+function startCustomSequence() {
+  const steps = collectBuilderSteps();
+  const invalidIndex = steps.findIndex((s) => !s.label || !Number.isFinite(s.duration));
+
+  if (invalidIndex !== -1) {
+    els.builderError.textContent = steps[invalidIndex].label
+      ? `Step ${invalidIndex + 1} needs a duration.`
+      : `Step ${invalidIndex + 1} needs a label.`;
+    els.builderError.classList.remove("hidden");
+    return;
+  }
+  els.builderError.classList.add("hidden");
+
+  const recipe = {
+    id: `custom-${Date.now()}`,
+    name: els.builderName.value.trim() || "Custom Sequence",
+    subtitle: `${pluralize(steps.length, "step")} · custom`,
+    description: steps.map((s) => s.label).join(" → "),
+    steps,
+  };
+
+  const customRecipes = loadCustomRecipes();
+  customRecipes.push(recipe);
+  saveCustomRecipes(customRecipes);
+
+  selectRecipe(recipe);
+}
+
 // ---------- Screen navigation ----------
+
+const SCREENS = {
+  select: els.screenSelect,
+  timer: els.screenTimer,
+  done: els.screenDone,
+  builder: els.screenBuilder,
+};
 
 const SCREEN_FOCUS_TARGET = {
   select: () => els.appTitle,
   timer: () => els.recipeName,
   done: () => els.doneHeading,
+  builder: () => els.builderHeading,
 };
 
 function showScreen(name) {
-  els.screenSelect.classList.toggle("hidden", name !== "select");
-  els.screenTimer.classList.toggle("hidden", name !== "timer");
-  els.screenDone.classList.toggle("hidden", name !== "done");
+  if (name === "select") renderRecipeList();
+  Object.entries(SCREENS).forEach(([key, el]) => {
+    el.classList.toggle("hidden", key !== name);
+  });
   SCREEN_FOCUS_TARGET[name]().focus();
 }
 
@@ -298,5 +458,8 @@ els.btnMute.addEventListener("click", toggleMute);
 els.btnAgain.addEventListener("click", () => {
   showScreen("select");
 });
+els.btnBuilderBack.addEventListener("click", () => showScreen("select"));
+els.btnAddStep.addEventListener("click", () => addBuilderStep());
+els.btnStartCustom.addEventListener("click", startCustomSequence);
 
 renderRecipeList();
