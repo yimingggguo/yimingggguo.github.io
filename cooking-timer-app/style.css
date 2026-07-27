@@ -3,11 +3,13 @@
   --bg-panel: #241a17;
   --ember: #ff5a2e;
   --ember-dim: #7a2e17;
+  --ember-dim-rgb: 122, 46, 23;
   --char: #0f0b0a;
   --text: #f5ece7;
   --text-dim: #b8a89f;
   --good: #4caf7d;
   --ring-track: #2e2321;
+  --border: #3a2a24;
   --radius: 18px;
 }
 
@@ -34,11 +36,26 @@ body {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 20px 24px;
+  padding: 0 20px calc(24px + env(safe-area-inset-bottom));
 }
 
 .screen { flex: 1; display: flex; flex-direction: column; }
 .hidden { display: none !important; }
+
+/* ---------- Focus ---------- */
+
+.recipe-card:focus-visible,
+.btn:focus-visible,
+.icon-btn:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+}
+
+#app-title:focus-visible,
+#recipe-name:focus-visible,
+#done-heading:focus-visible {
+  outline: none;
+}
 
 /* ---------- Header ---------- */
 
@@ -67,7 +84,7 @@ body {
 
 .recipe-card {
   background: var(--bg-panel);
-  border: 1px solid #3a2a24;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
   text-align: left;
@@ -114,7 +131,7 @@ body {
 
 .icon-btn {
   background: var(--bg-panel);
-  border: 1px solid #3a2a24;
+  border: 1px solid var(--border);
   color: var(--text);
   width: 44px;
   height: 44px;
@@ -122,8 +139,11 @@ body {
   font-size: 1.1rem;
   cursor: pointer;
   flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
 
+.icon-btn:hover { border-color: var(--ember); background: rgba(var(--ember-dim-rgb), 0.35); }
+.icon-btn:active { transform: scale(0.92); }
 .icon-btn.muted { opacity: 0.4; }
 
 .step-dots {
@@ -232,6 +252,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, filter 0.1s, transform 0.1s;
 }
 
 .btn-primary {
@@ -240,15 +261,17 @@ body {
   flex: 1.4;
 }
 
-.btn-primary:active { background: #e04a20; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:active { filter: brightness(0.85); transform: scale(0.98); }
 
 .btn-secondary {
   background: var(--bg-panel);
   color: var(--text);
-  border: 1px solid #3a2a24;
+  border: 1px solid var(--border);
 }
 
-.btn-secondary:active { border-color: var(--ember); }
+.btn-secondary:hover { border-color: var(--ember); background: rgba(var(--ember-dim-rgb), 0.35); }
+.btn-secondary:active { border-color: var(--ember); transform: scale(0.98); }
 
 /* ---------- Elapsed time ---------- */
 
@@ -286,3 +309,15 @@ body {
 .done-content p { color: var(--text-dim); margin: 0 0 16px; }
 
 .done-content .btn { min-width: 200px; }
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-progress,
+  .step-dots .dot,
+  .recipe-card,
+  .icon-btn,
+  .btn {
+    transition: none;
+  }
+}

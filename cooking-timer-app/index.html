@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Hands-free searing timer that walks you through each side, step by step, with a spoken cue when it's time to flip.">
+<meta name="theme-color" content="#181210">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
 <title>Steak Timer</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +16,7 @@
   <!-- Recipe selection screen -->
   <section id="screen-select" class="screen">
     <header class="app-header">
-      <h1>🔥 Steak Timer</h1>
+      <h1 id="app-title" tabindex="-1"><span aria-hidden="true">🔥</span> Steak Timer</h1>
       <p class="tagline">Pick a cut to start the searing sequence</p>
     </header>
 
@@ -26,15 +29,15 @@
     <header class="timer-header">
       <button id="btn-back" class="icon-btn" aria-label="Back to recipe list">←</button>
       <div class="timer-title">
-        <h2 id="recipe-name"></h2>
-        <div id="step-dots" class="step-dots"></div>
+        <h2 id="recipe-name" tabindex="-1"></h2>
+        <div id="step-dots" class="step-dots" aria-hidden="true"></div>
       </div>
       <button id="btn-mute" class="icon-btn" aria-label="Toggle voice announcements">🔊</button>
     </header>
 
     <div class="timer-body">
       <div class="ring-wrap">
-        <svg class="ring" viewBox="0 0 200 200">
+        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ring-track" cx="100" cy="100" r="90"></circle>
           <circle id="ring-progress" class="ring-progress" cx="100" cy="100" r="90"></circle>
         </svg>
@@ -44,14 +47,14 @@
         </div>
       </div>
 
-      <div id="instruction" class="instruction">Sear side 1</div>
+      <div id="instruction" class="instruction" aria-live="polite" aria-atomic="true">Sear side 1</div>
       <div id="next-up" class="next-up">Next: Sear side 2</div>
     </div>
 
     <div class="controls">
-      <button id="btn-skip" class="btn btn-secondary">Skip ⏭</button>
+      <button id="btn-skip" class="btn btn-secondary">Skip <span aria-hidden="true">⏭</span></button>
       <button id="btn-pause" class="btn btn-primary">Start</button>
-      <button id="btn-reset" class="btn btn-secondary">Reset ⟲</button>
+      <button id="btn-reset" class="btn btn-secondary">Reset <span aria-hidden="true">⟲</span></button>
     </div>
 
     <div class="elapsed">Total elapsed: <span id="elapsed-time">0:00</span></div>
@@ -60,8 +63,8 @@
   <!-- Done screen -->
   <section id="screen-done" class="screen hidden">
     <div class="done-content">
-      <div class="done-emoji">🥩</div>
-      <h2>Searing complete</h2>
+      <div class="done-emoji" aria-hidden="true">🥩</div>
+      <h2 id="done-heading" tabindex="-1">Searing complete</h2>
       <p>All 6 sides seared. Rest the steak before slicing.</p>
       <button id="btn-again" class="btn btn-primary">Cook another</button>
     </div>

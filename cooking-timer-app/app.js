@@ -7,6 +7,8 @@ const els = {
   screenSelect: document.getElementById("screen-select"),
   screenTimer: document.getElementById("screen-timer"),
   screenDone: document.getElementById("screen-done"),
+  appTitle: document.getElementById("app-title"),
+  doneHeading: document.getElementById("done-heading"),
   recipeList: document.getElementById("recipe-list"),
   recipeName: document.getElementById("recipe-name"),
   stepDots: document.getElementById("step-dots"),
@@ -260,10 +262,17 @@ function finish() {
 
 // ---------- Screen navigation ----------
 
+const SCREEN_FOCUS_TARGET = {
+  select: () => els.appTitle,
+  timer: () => els.recipeName,
+  done: () => els.doneHeading,
+};
+
 function showScreen(name) {
   els.screenSelect.classList.toggle("hidden", name !== "select");
   els.screenTimer.classList.toggle("hidden", name !== "timer");
   els.screenDone.classList.toggle("hidden", name !== "done");
+  SCREEN_FOCUS_TARGET[name]().focus();
 }
 
 function goBack() {
