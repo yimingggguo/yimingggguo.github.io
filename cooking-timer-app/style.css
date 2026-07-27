@@ -1,0 +1,273 @@
+:root {
+  --bg: #181210;
+  --bg-panel: #241a17;
+  --ember: #ff5a2e;
+  --ember-dim: #7a2e17;
+  --char: #0f0b0a;
+  --text: #f5ece7;
+  --text-dim: #b8a89f;
+  --good: #4caf7d;
+  --ring-track: #2e2321;
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at 50% -10%, #2a1a15 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px 24px;
+}
+
+.screen { flex: 1; display: flex; flex-direction: column; }
+.hidden { display: none !important; }
+
+/* ---------- Header ---------- */
+
+.app-header {
+  text-align: center;
+  padding: 40px 0 24px;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  margin: 0 0 6px;
+}
+
+.tagline {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ---------- Recipe list ---------- */
+
+.recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recipe-card {
+  background: var(--bg-panel);
+  border: 1px solid #3a2a24;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.recipe-card:hover { border-color: var(--ember); }
+.recipe-card:active { transform: scale(0.98); }
+
+.recipe-card h3 {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+}
+
+.recipe-card .subtitle {
+  color: var(--ember);
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recipe-card .description {
+  color: var(--text-dim);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ---------- Timer header ---------- */
+
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 8px;
+  gap: 12px;
+}
+
+.timer-title { text-align: center; flex: 1; }
+.timer-title h2 { margin: 0 0 8px; font-size: 1.3rem; }
+
+.icon-btn {
+  background: var(--bg-panel);
+  border: 1px solid #3a2a24;
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.icon-btn.muted { opacity: 0.4; }
+
+.step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.step-dots .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ring-track);
+  transition: background 0.2s;
+}
+
+.step-dots .dot.done { background: var(--good); }
+.step-dots .dot.active { background: var(--ember); }
+
+/* ---------- Timer body ---------- */
+
+.timer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 0 20px;
+}
+
+.ring-wrap {
+  position: relative;
+  width: min(70vw, 280px);
+  height: min(70vw, 280px);
+}
+
+.ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+.ring-track {
+  fill: none;
+  stroke: var(--ring-track);
+  stroke-width: 10;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--ember);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 565.48;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.2s linear, stroke 0.2s;
+}
+
+.ring-progress.warning { stroke: #ffb84d; }
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-left {
+  font-size: 3.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.step-count {
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-size: 0.9rem;
+}
+
+.instruction {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+}
+
+.next-up {
+  color: var(--text-dim);
+  font-size: 1rem;
+}
+
+/* ---------- Controls ---------- */
+
+.controls {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.btn {
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: 14px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--ember);
+  color: var(--char);
+  flex: 1.4;
+}
+
+.btn-primary:active { background: #e04a20; }
+
+.btn-secondary {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid #3a2a24;
+}
+
+.btn-secondary:active { border-color: var(--ember); }
+
+/* ---------- Done screen ---------- */
+
+#screen-done {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.done-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.done-emoji { font-size: 4rem; }
+
+.done-content h2 { margin: 0; }
+.done-content p { color: var(--text-dim); margin: 0 0 16px; }
+
+.done-content .btn { min-width: 200px; }
