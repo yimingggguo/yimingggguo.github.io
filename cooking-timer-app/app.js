@@ -15,6 +15,7 @@ const els = {
   stepCount: document.getElementById("step-count"),
   instruction: document.getElementById("instruction"),
   nextUp: document.getElementById("next-up"),
+  elapsedTime: document.getElementById("elapsed-time"),
   btnPause: document.getElementById("btn-pause"),
   btnSkip: document.getElementById("btn-skip"),
   btnReset: document.getElementById("btn-reset"),
@@ -30,6 +31,7 @@ const state = {
   steps: [],
   stepIndex: 0,
   remainingMs: 0,
+  elapsedMs: 0,
   running: false,
   started: false,
   intervalId: null,
@@ -91,6 +93,7 @@ function selectRecipe(key) {
   state.steps = recipe.steps;
   state.stepIndex = 0;
   state.remainingMs = recipe.steps[0].duration * 1000;
+  state.elapsedMs = 0;
   state.running = false;
   state.started = false;
   clearInterval(state.intervalId);
@@ -122,8 +125,8 @@ function updateStepDots() {
   });
 }
 
-function formatTime(ms) {
-  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+function formatTime(ms, roundDown = false) {
+  const totalSeconds = Math.max(0, roundDown ? Math.floor(ms / 1000) : Math.ceil(ms / 1000));
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
@@ -140,6 +143,11 @@ function renderStep() {
   updateRing(1);
   els.ringProgress.classList.remove("warning");
   updateStepDots();
+  updateElapsedDisplay();
+}
+
+function updateElapsedDisplay() {
+  els.elapsedTime.textContent = formatTime(state.elapsedMs, true);
 }
 
 function updateRing(fraction) {
@@ -154,6 +162,8 @@ function tick() {
   const delta = now - state.lastTick;
   state.lastTick = now;
   state.remainingMs -= delta;
+  state.elapsedMs += delta;
+  updateElapsedDisplay();
 
   if (state.remainingMs <= 0) {
     advanceStep();
@@ -233,6 +243,7 @@ function resetTimer() {
   window.speechSynthesis && window.speechSynthesis.cancel();
   state.stepIndex = 0;
   state.remainingMs = state.steps[0].duration * 1000;
+  state.elapsedMs = 0;
   state.running = false;
   state.started = false;
   els.btnPause.textContent = "Start";

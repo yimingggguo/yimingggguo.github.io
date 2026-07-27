@@ -250,6 +250,21 @@ body {
 
 .btn-secondary:active { border-color: var(--ember); }
 
+/* ---------- Elapsed time ---------- */
+
+.elapsed {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 6px;
+}
+
+.elapsed span {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* ---------- Done screen ---------- */
 
 #screen-done {
