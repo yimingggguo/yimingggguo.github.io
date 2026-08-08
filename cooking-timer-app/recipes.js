@@ -17,4 +17,18 @@ const RECIPES = {
       { label: "Sear side 6", duration: 30 },
     ],
   },
+
+  "medium-rare-cut": {
+    name: "Medium Rare Cut",
+    subtitle: "Sides then edges, medium-rare finish",
+    description: "Sear both sides for 1 minute each, then rotate through all four edges for 30s each.",
+    steps: [
+      { label: "Sear a side", duration: 60 },
+      { label: "Flip and sear the other side", duration: 60 },
+      { label: "Sear edge", duration: 30 },
+      { label: "Rotate and sear another edge", duration: 30 },
+      { label: "Rotate and sear another edge", duration: 30 },
+      { label: "Rotate and sear another edge", duration: 30 },
+    ],
+  },
 };
