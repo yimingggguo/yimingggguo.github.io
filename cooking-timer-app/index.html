@@ -17,17 +17,30 @@
   <section id="screen-select" class="screen">
     <header class="app-header">
       <h1 id="app-title" tabindex="-1"><span aria-hidden="true">🔥</span> Steak Timer</h1>
-      <p class="tagline">Pick a cut to start the searing sequence</p>
+      <p class="tagline">Pick a cut, or grab a tool below</p>
     </header>
 
+    <h2 class="section-heading">Recipes</h2>
     <div id="recipe-list" class="recipe-list"></div>
+
+    <h2 class="section-heading">Tools</h2>
+    <div class="tools-row">
+      <button id="btn-open-stopwatch" type="button" class="tool-card">
+        <span class="tool-icon" aria-hidden="true">⏱️</span>
+        Stopwatch
+      </button>
+      <button id="btn-open-timer-setup" type="button" class="tool-card">
+        <span class="tool-icon" aria-hidden="true">⏲️</span>
+        Timer
+      </button>
+    </div>
   </section>
 
   <!-- Timer screen -->
   <section id="screen-timer" class="screen hidden">
 
     <header class="timer-header">
-      <button id="btn-back" class="icon-btn" aria-label="Back to recipe list">←</button>
+      <button id="btn-back" class="icon-btn" aria-label="Back to home">←</button>
       <div class="timer-title">
         <h2 id="recipe-name" tabindex="-1"></h2>
         <div id="step-dots" class="step-dots" aria-hidden="true"></div>
@@ -74,7 +87,7 @@
   <!-- Custom sequence builder -->
   <section id="screen-builder" class="screen hidden">
     <header class="timer-header">
-      <button id="btn-builder-back" class="icon-btn" aria-label="Back to recipe list">←</button>
+      <button id="btn-builder-back" class="icon-btn" aria-label="Back to home">←</button>
       <div class="timer-title">
         <h2 id="builder-heading" tabindex="-1">New Sequence</h2>
       </div>
@@ -97,6 +110,93 @@
     <div class="controls">
       <button id="btn-start-custom" class="btn btn-primary">Start Sequence</button>
     </div>
+  </section>
+
+  <!-- Stopwatch -->
+  <section id="screen-stopwatch" class="screen hidden">
+    <header class="timer-header">
+      <button id="btn-stopwatch-back" class="icon-btn" aria-label="Back to home">←</button>
+      <div class="timer-title">
+        <h2 id="stopwatch-heading" tabindex="-1">Stopwatch</h2>
+      </div>
+      <span class="icon-btn-placeholder" aria-hidden="true"></span>
+    </header>
+
+    <div class="timer-body">
+      <div id="stopwatch-time" class="stopwatch-time">0:00.0</div>
+    </div>
+
+    <div class="controls">
+      <button id="btn-stopwatch-pause" class="btn btn-primary">Start</button>
+      <button id="btn-stopwatch-reset" class="btn btn-secondary">Reset <span aria-hidden="true">⟲</span></button>
+    </div>
+  </section>
+
+  <!-- Timer setup -->
+  <section id="screen-timer-setup" class="screen hidden">
+    <header class="timer-header">
+      <button id="btn-timer-setup-back" class="icon-btn" aria-label="Back to home">←</button>
+      <div class="timer-title">
+        <h2 id="timer-setup-heading" tabindex="-1">Set Timer</h2>
+      </div>
+      <span class="icon-btn-placeholder" aria-hidden="true"></span>
+    </header>
+
+    <div class="builder-body">
+      <div class="duration-fields">
+        <label class="field">
+          <span class="field-label">Minutes</span>
+          <input id="timer-minutes" type="number" min="0" max="180" value="1" inputmode="numeric">
+        </label>
+        <label class="field">
+          <span class="field-label">Seconds</span>
+          <input id="timer-seconds" type="number" min="0" max="59" value="0" inputmode="numeric">
+        </label>
+      </div>
+
+      <label class="checkbox-field">
+        <input id="timer-repeat" type="checkbox">
+        <span>Repeat when it reaches zero</span>
+      </label>
+
+      <p id="timer-setup-error" class="builder-error hidden" role="alert"></p>
+    </div>
+
+    <div class="controls">
+      <button id="btn-start-timer" class="btn btn-primary">Start Timer</button>
+    </div>
+  </section>
+
+  <!-- Running custom timer -->
+  <section id="screen-tool-timer" class="screen hidden">
+    <header class="timer-header">
+      <button id="btn-tool-timer-back" class="icon-btn" aria-label="Back to home">←</button>
+      <div class="timer-title">
+        <h2 id="tool-timer-heading" tabindex="-1">Timer</h2>
+      </div>
+      <button id="btn-timer-mute" class="icon-btn" aria-label="Toggle voice announcements">🔊</button>
+    </header>
+
+    <div class="timer-body">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-track" cx="100" cy="100" r="90"></circle>
+          <circle id="tool-timer-ring-progress" class="ring-progress" cx="100" cy="100" r="90"></circle>
+        </svg>
+        <div class="ring-center">
+          <div id="tool-timer-time-left" class="time-left">1:00</div>
+        </div>
+      </div>
+
+      <div id="tool-timer-status" class="instruction" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <div class="controls">
+      <button id="btn-tool-timer-pause" class="btn btn-primary">Start</button>
+      <button id="btn-tool-timer-reset" class="btn btn-secondary">Reset <span aria-hidden="true">⟲</span></button>
+    </div>
+
+    <div id="tool-timer-elapsed" class="elapsed hidden">Total elapsed: <span id="tool-timer-elapsed-time">0:00</span></div>
   </section>
 
 </main>

@@ -34,9 +34,40 @@ const els = {
   btnAddStep: document.getElementById("btn-add-step"),
   btnStartCustom: document.getElementById("btn-start-custom"),
   btnBuilderBack: document.getElementById("btn-builder-back"),
+
+  screenStopwatch: document.getElementById("screen-stopwatch"),
+  stopwatchHeading: document.getElementById("stopwatch-heading"),
+  stopwatchTime: document.getElementById("stopwatch-time"),
+  btnStopwatchPause: document.getElementById("btn-stopwatch-pause"),
+  btnStopwatchReset: document.getElementById("btn-stopwatch-reset"),
+  btnStopwatchBack: document.getElementById("btn-stopwatch-back"),
+  btnOpenStopwatch: document.getElementById("btn-open-stopwatch"),
+
+  screenTimerSetup: document.getElementById("screen-timer-setup"),
+  timerSetupHeading: document.getElementById("timer-setup-heading"),
+  timerMinutes: document.getElementById("timer-minutes"),
+  timerSeconds: document.getElementById("timer-seconds"),
+  timerRepeat: document.getElementById("timer-repeat"),
+  timerSetupError: document.getElementById("timer-setup-error"),
+  btnStartTimer: document.getElementById("btn-start-timer"),
+  btnTimerSetupBack: document.getElementById("btn-timer-setup-back"),
+  btnOpenTimerSetup: document.getElementById("btn-open-timer-setup"),
+
+  screenToolTimer: document.getElementById("screen-tool-timer"),
+  toolTimerHeading: document.getElementById("tool-timer-heading"),
+  toolTimerRingProgress: document.getElementById("tool-timer-ring-progress"),
+  toolTimerTimeLeft: document.getElementById("tool-timer-time-left"),
+  toolTimerStatus: document.getElementById("tool-timer-status"),
+  toolTimerElapsed: document.getElementById("tool-timer-elapsed"),
+  toolTimerElapsedTime: document.getElementById("tool-timer-elapsed-time"),
+  btnToolTimerPause: document.getElementById("btn-tool-timer-pause"),
+  btnToolTimerReset: document.getElementById("btn-tool-timer-reset"),
+  btnToolTimerBack: document.getElementById("btn-tool-timer-back"),
+  btnTimerMute: document.getElementById("btn-timer-mute"),
 };
 
 els.ringProgress.style.strokeDasharray = String(RING_CIRCUMFERENCE);
+els.toolTimerRingProgress.style.strokeDasharray = String(RING_CIRCUMFERENCE);
 
 const state = {
   steps: [],
@@ -47,15 +78,17 @@ const state = {
   started: false,
   intervalId: null,
   lastTick: null,
-  muted: false,
 };
+
+let muted = false;
+const muteButtons = [els.btnMute, els.btnTimerMute];
 
 // ---------- Audio ----------
 
 let audioCtx = null;
 
 function beep(freq = 880, duration = 150) {
-  if (state.muted) return;
+  if (muted) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioCtx.createOscillator();
@@ -73,7 +106,7 @@ function beep(freq = 880, duration = 150) {
 }
 
 function speak(text) {
-  if (state.muted || !("speechSynthesis" in window)) return;
+  if (muted || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.rate = 1;
@@ -212,7 +245,7 @@ function renderStep() {
   els.nextUp.textContent = next ? `Next: ${next.label}` : "Final side — then rest the steak";
   els.stepCount.textContent = `Step ${state.stepIndex + 1} of ${state.steps.length}`;
   els.timeLeft.textContent = formatTime(state.remainingMs);
-  updateRing(1);
+  updateRing(els.ringProgress, 1);
   els.ringProgress.classList.remove("warning");
   updateStepDots();
   updateElapsedDisplay();
@@ -222,9 +255,9 @@ function updateElapsedDisplay() {
   els.elapsedTime.textContent = formatTime(state.elapsedMs, true);
 }
 
-function updateRing(fraction) {
+function updateRing(ringEl, fraction) {
   const offset = RING_CIRCUMFERENCE * (1 - fraction);
-  els.ringProgress.style.strokeDashoffset = String(offset);
+  ringEl.style.strokeDashoffset = String(offset);
 }
 
 // ---------- Timer engine ----------
@@ -245,7 +278,7 @@ function tick() {
   const step = state.steps[state.stepIndex];
   const fraction = state.remainingMs / (step.duration * 1000);
   els.timeLeft.textContent = formatTime(state.remainingMs);
-  updateRing(fraction);
+  updateRing(els.ringProgress, fraction);
   els.ringProgress.classList.toggle("warning", state.remainingMs <= 5000);
 }
 
@@ -411,6 +444,196 @@ function startCustomSequence() {
   selectRecipe(recipe);
 }
 
+// ---------- Stopwatch ----------
+
+const swState = {
+  elapsedMs: 0,
+  running: false,
+  intervalId: null,
+  lastTick: null,
+};
+
+function formatStopwatch(ms) {
+  const total = Math.max(0, ms);
+  const totalSeconds = Math.floor(total / 1000);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const tenths = Math.floor((total % 1000) / 100);
+  return `${m}:${String(s).padStart(2, "0")}.${tenths}`;
+}
+
+function openStopwatch() {
+  clearInterval(swState.intervalId);
+  swState.elapsedMs = 0;
+  swState.running = false;
+  els.stopwatchTime.textContent = formatStopwatch(0);
+  els.btnStopwatchPause.textContent = "Start";
+  showScreen("stopwatch");
+}
+
+function stopwatchTick() {
+  const now = Date.now();
+  swState.elapsedMs += now - swState.lastTick;
+  swState.lastTick = now;
+  els.stopwatchTime.textContent = formatStopwatch(swState.elapsedMs);
+}
+
+function toggleStopwatch() {
+  if (swState.running) {
+    swState.running = false;
+    clearInterval(swState.intervalId);
+    els.btnStopwatchPause.textContent = "Resume";
+  } else {
+    swState.running = true;
+    swState.lastTick = Date.now();
+    swState.intervalId = setInterval(stopwatchTick, 100);
+    els.btnStopwatchPause.textContent = "Pause";
+  }
+}
+
+function resetStopwatch() {
+  clearInterval(swState.intervalId);
+  swState.elapsedMs = 0;
+  swState.running = false;
+  els.stopwatchTime.textContent = formatStopwatch(0);
+  els.btnStopwatchPause.textContent = "Start";
+}
+
+// ---------- Custom timer ----------
+
+const ctState = {
+  durationMs: 0,
+  remainingMs: 0,
+  elapsedMs: 0,
+  repeat: false,
+  running: false,
+  started: false,
+  finished: false,
+  intervalId: null,
+  lastTick: null,
+};
+
+function openTimerSetup() {
+  clearInterval(ctState.intervalId);
+  els.timerSetupError.classList.add("hidden");
+  showScreen("timer-setup");
+}
+
+function startCustomTimer() {
+  const minutes = parseInt(els.timerMinutes.value, 10) || 0;
+  const seconds = parseInt(els.timerSeconds.value, 10) || 0;
+  const totalSeconds = minutes * 60 + seconds;
+
+  if (totalSeconds < 1) {
+    els.timerSetupError.textContent = "Set a duration of at least 1 second.";
+    els.timerSetupError.classList.remove("hidden");
+    return;
+  }
+  els.timerSetupError.classList.add("hidden");
+
+  ctState.durationMs = totalSeconds * 1000;
+  ctState.remainingMs = ctState.durationMs;
+  ctState.elapsedMs = 0;
+  ctState.repeat = els.timerRepeat.checked;
+  ctState.running = false;
+  ctState.started = false;
+  ctState.finished = false;
+
+  els.toolTimerElapsed.classList.toggle("hidden", !ctState.repeat);
+  renderCustomTimer();
+  els.btnToolTimerPause.textContent = "Start";
+  showScreen("tool-timer");
+}
+
+function renderCustomTimer() {
+  els.toolTimerTimeLeft.textContent = formatTime(ctState.remainingMs);
+  updateRing(els.toolTimerRingProgress, 1);
+  els.toolTimerRingProgress.classList.remove("warning");
+  els.toolTimerStatus.textContent = "";
+  if (ctState.repeat) {
+    els.toolTimerElapsedTime.textContent = formatTime(ctState.elapsedMs, true);
+  }
+}
+
+function customTimerTick() {
+  const now = Date.now();
+  const delta = now - ctState.lastTick;
+  ctState.lastTick = now;
+  ctState.remainingMs -= delta;
+  if (ctState.repeat) {
+    ctState.elapsedMs += delta;
+    els.toolTimerElapsedTime.textContent = formatTime(ctState.elapsedMs, true);
+  }
+
+  if (ctState.remainingMs <= 0) {
+    beep(1200, 300);
+    speak("Time's up");
+
+    if (ctState.repeat) {
+      ctState.remainingMs += ctState.durationMs;
+      if (ctState.remainingMs <= 0) ctState.remainingMs = ctState.durationMs;
+      els.toolTimerTimeLeft.textContent = formatTime(ctState.remainingMs);
+      updateRing(els.toolTimerRingProgress, ctState.remainingMs / ctState.durationMs);
+      return;
+    }
+
+    clearInterval(ctState.intervalId);
+    ctState.running = false;
+    ctState.finished = true;
+    els.toolTimerTimeLeft.textContent = "0:00";
+    updateRing(els.toolTimerRingProgress, 0);
+    els.toolTimerStatus.textContent = "Time's up!";
+    els.btnToolTimerPause.textContent = "Start";
+    return;
+  }
+
+  els.toolTimerTimeLeft.textContent = formatTime(ctState.remainingMs);
+  updateRing(els.toolTimerRingProgress, ctState.remainingMs / ctState.durationMs);
+  els.toolTimerRingProgress.classList.toggle("warning", ctState.remainingMs <= 5000);
+}
+
+function startCustomTimerInterval() {
+  clearInterval(ctState.intervalId);
+  ctState.lastTick = Date.now();
+  ctState.intervalId = setInterval(customTimerTick, 100);
+}
+
+function toggleCustomTimer() {
+  if (ctState.finished) {
+    resetCustomTimer();
+  }
+
+  if (!ctState.started) {
+    ctState.started = true;
+    ctState.running = true;
+    startCustomTimerInterval();
+    els.btnToolTimerPause.textContent = "Pause";
+    return;
+  }
+
+  if (ctState.running) {
+    ctState.running = false;
+    clearInterval(ctState.intervalId);
+    els.btnToolTimerPause.textContent = "Resume";
+  } else {
+    ctState.running = true;
+    startCustomTimerInterval();
+    els.btnToolTimerPause.textContent = "Pause";
+  }
+}
+
+function resetCustomTimer() {
+  clearInterval(ctState.intervalId);
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  ctState.remainingMs = ctState.durationMs;
+  ctState.elapsedMs = 0;
+  ctState.running = false;
+  ctState.started = false;
+  ctState.finished = false;
+  renderCustomTimer();
+  els.btnToolTimerPause.textContent = "Start";
+}
+
 // ---------- Screen navigation ----------
 
 const SCREENS = {
@@ -418,6 +641,9 @@ const SCREENS = {
   timer: els.screenTimer,
   done: els.screenDone,
   builder: els.screenBuilder,
+  stopwatch: els.screenStopwatch,
+  "timer-setup": els.screenTimerSetup,
+  "tool-timer": els.screenToolTimer,
 };
 
 const SCREEN_FOCUS_TARGET = {
@@ -425,9 +651,15 @@ const SCREEN_FOCUS_TARGET = {
   timer: () => els.recipeName,
   done: () => els.doneHeading,
   builder: () => els.builderHeading,
+  stopwatch: () => els.stopwatchHeading,
+  "timer-setup": () => els.timerSetupHeading,
+  "tool-timer": () => els.toolTimerHeading,
 };
 
 function showScreen(name) {
+  clearInterval(state.intervalId);
+  clearInterval(swState.intervalId);
+  clearInterval(ctState.intervalId);
   if (name === "select") renderRecipeList();
   Object.entries(SCREENS).forEach(([key, el]) => {
     el.classList.toggle("hidden", key !== name);
@@ -436,16 +668,17 @@ function showScreen(name) {
 }
 
 function goBack() {
-  clearInterval(state.intervalId);
   window.speechSynthesis && window.speechSynthesis.cancel();
   showScreen("select");
 }
 
 function toggleMute() {
-  state.muted = !state.muted;
-  els.btnMute.textContent = state.muted ? "🔇" : "🔊";
-  els.btnMute.classList.toggle("muted", state.muted);
-  if (state.muted) window.speechSynthesis && window.speechSynthesis.cancel();
+  muted = !muted;
+  muteButtons.forEach((btn) => {
+    btn.textContent = muted ? "🔇" : "🔊";
+    btn.classList.toggle("muted", muted);
+  });
+  if (muted) window.speechSynthesis && window.speechSynthesis.cancel();
 }
 
 // ---------- Wire up ----------
@@ -461,5 +694,18 @@ els.btnAgain.addEventListener("click", () => {
 els.btnBuilderBack.addEventListener("click", () => showScreen("select"));
 els.btnAddStep.addEventListener("click", () => addBuilderStep());
 els.btnStartCustom.addEventListener("click", startCustomSequence);
+
+els.btnOpenStopwatch.addEventListener("click", openStopwatch);
+els.btnStopwatchPause.addEventListener("click", toggleStopwatch);
+els.btnStopwatchReset.addEventListener("click", resetStopwatch);
+els.btnStopwatchBack.addEventListener("click", () => showScreen("select"));
+
+els.btnOpenTimerSetup.addEventListener("click", openTimerSetup);
+els.btnTimerSetupBack.addEventListener("click", () => showScreen("select"));
+els.btnStartTimer.addEventListener("click", startCustomTimer);
+els.btnToolTimerPause.addEventListener("click", toggleCustomTimer);
+els.btnToolTimerReset.addEventListener("click", resetCustomTimer);
+els.btnToolTimerBack.addEventListener("click", () => showScreen("select"));
+els.btnTimerMute.addEventListener("click", toggleMute);
 
 renderRecipeList();

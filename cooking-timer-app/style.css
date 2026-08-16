@@ -46,6 +46,7 @@ body {
 
 .recipe-card-main:focus-visible,
 .recipe-card-add:focus-visible,
+.tool-card:focus-visible,
 .btn:focus-visible,
 .icon-btn:focus-visible,
 .step-remove-btn:focus-visible,
@@ -57,7 +58,10 @@ input:focus-visible {
 #app-title:focus-visible,
 #recipe-name:focus-visible,
 #done-heading:focus-visible,
-#builder-heading:focus-visible {
+#builder-heading:focus-visible,
+#stopwatch-heading:focus-visible,
+#timer-setup-heading:focus-visible,
+#tool-timer-heading:focus-visible {
   outline: none;
 }
 
@@ -77,6 +81,19 @@ input:focus-visible {
   color: var(--text-dim);
   margin: 0;
 }
+
+/* ---------- Section headings ---------- */
+
+.section-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 28px 0 12px;
+}
+
+.section-heading:first-of-type { margin-top: 8px; }
 
 /* ---------- Recipe list ---------- */
 
@@ -173,6 +190,35 @@ input:focus-visible {
 .recipe-card-add:hover { border-color: var(--ember); color: var(--text); }
 .recipe-card-add:active { transform: scale(0.98); }
 .recipe-card-add .add-icon { font-size: 1.2rem; line-height: 1; }
+
+/* ---------- Tools ---------- */
+
+.tools-row {
+  display: flex;
+  gap: 14px;
+}
+
+.tool-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.tool-card:hover { border-color: var(--ember); }
+.tool-card:active { transform: scale(0.98); }
+.tool-card .tool-icon { font-size: 1.8rem; line-height: 1; }
 
 /* ---------- Timer header ---------- */
 
@@ -291,6 +337,14 @@ input:focus-visible {
 .next-up {
   color: var(--text-dim);
   font-size: 1rem;
+}
+
+.stopwatch-time {
+  font-size: 4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
 }
 
 /* ---------- Controls ---------- */
@@ -412,6 +466,55 @@ input:focus-visible {
   font-family: inherit;
 }
 
+.duration-fields {
+  display: flex;
+  gap: 14px;
+}
+
+.duration-fields .field { flex: 1; }
+
+.duration-fields input[type="number"] {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 1.3rem;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.duration-fields input[type="number"]::-webkit-outer-spin-button,
+.duration-fields input[type="number"]::-webkit-inner-spin-button,
+.step-duration-input::-webkit-outer-spin-button,
+.step-duration-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.step-duration-input { -moz-appearance: textfield; }
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 2px;
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--ember);
+  cursor: pointer;
+}
+
 .builder-steps {
   display: flex;
   flex-direction: column;
@@ -485,6 +588,7 @@ input:focus-visible {
   .recipe-card,
   .recipe-card-add,
   .recipe-card-delete,
+  .tool-card,
   .step-remove-btn,
   .icon-btn,
   .btn {
