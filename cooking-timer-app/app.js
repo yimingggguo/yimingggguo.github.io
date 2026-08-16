@@ -107,11 +107,19 @@ function beep(freq = 880, duration = 150) {
 
 function speak(text) {
   if (muted || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
+  const synth = window.speechSynthesis;
   const utter = new SpeechSynthesisUtterance(text);
   utter.rate = 1;
   utter.pitch = 1;
-  window.speechSynthesis.speak(utter);
+
+  if (synth.speaking || synth.pending) {
+    // Cancelling and speaking in the same tick can make some browsers silently
+    // drop the new utterance, so give the cancel a moment to actually land.
+    synth.cancel();
+    setTimeout(() => synth.speak(utter), 50);
+  } else {
+    synth.speak(utter);
+  }
 }
 
 // ---------- Recipe selection ----------
