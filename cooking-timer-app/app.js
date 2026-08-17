@@ -614,6 +614,10 @@ function toggleCustomTimer() {
   if (!ctState.started) {
     ctState.started = true;
     ctState.running = true;
+    // Announcing here, synchronously inside the tap, is what unlocks speech
+    // on mobile browsers for the automatic "Time's up" calls that follow.
+    beep();
+    speak("Timer started");
     startCustomTimerInterval();
     els.btnToolTimerPause.textContent = "Pause";
     return;
