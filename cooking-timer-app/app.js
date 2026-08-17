@@ -593,6 +593,16 @@ function createWheel(colEl, { max, unit, initial = 0 }) {
     else if (e.key === "End") { e.preventDefault(); setValue(max, true); }
   });
 
+  colEl.addEventListener("wheel", (e) => {
+    // A physical mouse wheel delivers one large delta per notch (~100-120px
+    // on Windows), which overshoots a 44px row by 2-3 items. Step those by
+    // exactly one item instead; leave small continuous trackpad deltas alone
+    // so that gesture stays smooth and native.
+    if (Math.abs(e.deltaY) < 40) return;
+    e.preventDefault();
+    setValue(current + (e.deltaY > 0 ? 1 : -1), true);
+  }, { passive: false });
+
   colEl.setAttribute("aria-valuemin", "0");
   colEl.setAttribute("aria-valuemax", String(max));
   paint(initial);
