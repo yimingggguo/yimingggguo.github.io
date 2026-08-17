@@ -143,15 +143,26 @@
     </header>
 
     <div class="builder-body">
-      <div class="duration-fields">
-        <label class="field">
-          <span class="field-label">Minutes</span>
-          <input id="timer-minutes" type="number" min="0" max="180" value="1" inputmode="numeric">
-        </label>
-        <label class="field">
-          <span class="field-label">Seconds</span>
-          <input id="timer-seconds" type="number" min="0" max="59" value="0" inputmode="numeric">
-        </label>
+      <div class="wheel-field">
+        <div class="wheel-labels" aria-hidden="true">
+          <span>Hours</span>
+          <span>Min</span>
+          <span>Sec</span>
+        </div>
+        <div class="wheel-picker">
+          <div class="wheel-highlight" aria-hidden="true"></div>
+          <div class="wheel-cols">
+            <div id="wheel-hours" class="wheel-col" role="slider" tabindex="0" aria-label="Hours" aria-valuemin="0" aria-valuemax="23" aria-valuenow="0" aria-valuetext="0 hours">
+              <div class="wheel-track"></div>
+            </div>
+            <div id="wheel-minutes" class="wheel-col" role="slider" tabindex="0" aria-label="Minutes" aria-valuemin="0" aria-valuemax="59" aria-valuenow="1" aria-valuetext="1 minute">
+              <div class="wheel-track"></div>
+            </div>
+            <div id="wheel-seconds" class="wheel-col" role="slider" tabindex="0" aria-label="Seconds" aria-valuemin="0" aria-valuemax="59" aria-valuenow="0" aria-valuetext="0 seconds">
+              <div class="wheel-track"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <label class="checkbox-field">

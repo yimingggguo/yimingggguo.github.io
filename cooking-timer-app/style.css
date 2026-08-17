@@ -466,29 +466,6 @@ input:focus-visible {
   font-family: inherit;
 }
 
-.duration-fields {
-  display: flex;
-  gap: 14px;
-}
-
-.duration-fields .field { flex: 1; }
-
-.duration-fields input[type="number"] {
-  width: 100%;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  color: var(--text);
-  font-size: 1.3rem;
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-  -moz-appearance: textfield;
-}
-
-.duration-fields input[type="number"]::-webkit-outer-spin-button,
-.duration-fields input[type="number"]::-webkit-inner-spin-button,
 .step-duration-input::-webkit-outer-spin-button,
 .step-duration-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -496,6 +473,90 @@ input:focus-visible {
 }
 
 .step-duration-input { -moz-appearance: textfield; }
+
+/* ---------- Duration wheel picker ---------- */
+
+.wheel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wheel-labels {
+  display: flex;
+}
+
+.wheel-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.wheel-picker {
+  position: relative;
+  height: 220px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.wheel-highlight {
+  position: absolute;
+  top: 88px;
+  left: 0;
+  right: 0;
+  height: 44px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(var(--ember-dim-rgb), 0.18);
+  pointer-events: none;
+}
+
+.wheel-cols {
+  display: flex;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 70px, black 150px, transparent 220px);
+  mask-image: linear-gradient(to bottom, transparent 0, black 70px, black 150px, transparent 220px);
+}
+
+.wheel-col {
+  flex: 1;
+  height: 220px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wheel-col::-webkit-scrollbar { display: none; }
+
+.wheel-col:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: -2px;
+}
+
+.wheel-track {
+  padding: 88px 0;
+}
+
+.wheel-item {
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  scroll-snap-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.1s;
+}
+
+.wheel-item.selected { color: var(--text); }
 
 .checkbox-field {
   display: flex;

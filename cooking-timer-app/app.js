@@ -45,8 +45,9 @@ const els = {
 
   screenTimerSetup: document.getElementById("screen-timer-setup"),
   timerSetupHeading: document.getElementById("timer-setup-heading"),
-  timerMinutes: document.getElementById("timer-minutes"),
-  timerSeconds: document.getElementById("timer-seconds"),
+  wheelHours: document.getElementById("wheel-hours"),
+  wheelMinutes: document.getElementById("wheel-minutes"),
+  wheelSeconds: document.getElementById("wheel-seconds"),
   timerRepeat: document.getElementById("timer-repeat"),
   timerSetupError: document.getElementById("timer-setup-error"),
   btnStartTimer: document.getElementById("btn-start-timer"),
@@ -521,16 +522,106 @@ const ctState = {
   lastTick: null,
 };
 
+// ---------- Duration wheel picker ----------
+
+const WHEEL_ITEM_HEIGHT = 44;
+
+function createWheel(colEl, { max, unit, initial = 0 }) {
+  const track = colEl.querySelector(".wheel-track");
+  track.innerHTML = "";
+  for (let i = 0; i <= max; i++) {
+    const item = document.createElement("div");
+    item.className = "wheel-item";
+    item.textContent = String(i).padStart(2, "0");
+    item.dataset.value = String(i);
+    track.appendChild(item);
+  }
+
+  const items = [...track.children];
+  let current = initial;
+  let rafPending = false;
+  let settleTimer = null;
+
+  const clamp = (i) => Math.max(0, Math.min(max, i));
+  const valueText = (n) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+
+  function paint(index) {
+    items.forEach((item, i) => item.classList.toggle("selected", i === index));
+  }
+
+  function commit(index) {
+    current = index;
+    colEl.setAttribute("aria-valuenow", String(index));
+    colEl.setAttribute("aria-valuetext", valueText(index));
+  }
+
+  function handleScroll() {
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        paint(clamp(Math.round(colEl.scrollTop / WHEEL_ITEM_HEIGHT)));
+      });
+    }
+    // Treat scrolling as settled a moment after the last scroll event —
+    // scroll-snap has already finished animating into place by then.
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      commit(clamp(Math.round(colEl.scrollTop / WHEEL_ITEM_HEIGHT)));
+    }, 120);
+  }
+
+  function setValue(index, smooth = false) {
+    index = clamp(index);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    colEl.scrollTo({ top: index * WHEEL_ITEM_HEIGHT, behavior: smooth && !reduceMotion ? "smooth" : "instant" });
+    paint(index);
+    commit(index);
+  }
+
+  colEl.addEventListener("scroll", handleScroll, { passive: true });
+
+  track.addEventListener("click", (e) => {
+    const item = e.target.closest(".wheel-item");
+    if (item) setValue(Number(item.dataset.value), true);
+  });
+
+  colEl.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") { e.preventDefault(); setValue(current - 1, true); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); setValue(current + 1, true); }
+    else if (e.key === "Home") { e.preventDefault(); setValue(0, true); }
+    else if (e.key === "End") { e.preventDefault(); setValue(max, true); }
+  });
+
+  colEl.setAttribute("aria-valuemin", "0");
+  colEl.setAttribute("aria-valuemax", String(max));
+  paint(initial);
+  commit(initial);
+
+  return { getValue: () => current, setValue };
+}
+
+const hoursWheel = createWheel(els.wheelHours, { max: 23, unit: "hour", initial: 0 });
+const minutesWheel = createWheel(els.wheelMinutes, { max: 59, unit: "minute", initial: 1 });
+const secondsWheel = createWheel(els.wheelSeconds, { max: 59, unit: "second", initial: 0 });
+
 function openTimerSetup() {
   clearInterval(ctState.intervalId);
   els.timerSetupError.classList.add("hidden");
   showScreen("timer-setup");
+  // Position after the screen has actually been laid out — scrollTo called
+  // in the same tick as unhiding the element doesn't reliably stick.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      hoursWheel.setValue(0);
+      minutesWheel.setValue(1);
+      secondsWheel.setValue(0);
+    });
+  });
 }
 
 function startCustomTimer() {
-  const minutes = parseInt(els.timerMinutes.value, 10) || 0;
-  const seconds = parseInt(els.timerSeconds.value, 10) || 0;
-  const totalSeconds = minutes * 60 + seconds;
+  const totalSeconds = hoursWheel.getValue() * 3600 + minutesWheel.getValue() * 60 + secondsWheel.getValue();
 
   if (totalSeconds < 1) {
     els.timerSetupError.textContent = "Set a duration of at least 1 second.";
