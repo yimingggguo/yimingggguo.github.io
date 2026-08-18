@@ -15,9 +15,17 @@
 
 * { box-sizing: border-box; }
 
+html {
+  /* Every control already has its own :active feedback; the default gray
+     flash would double up with it and look inconsistent against the dark
+     ember theme. */
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
   height: 100%;
   margin: 0;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -36,7 +44,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 20px calc(24px + env(safe-area-inset-bottom));
+  padding: calc(8px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
 }
 
 .screen { flex: 1; display: flex; flex-direction: column; }
